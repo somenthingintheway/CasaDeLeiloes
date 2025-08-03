@@ -2,6 +2,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -140,17 +141,35 @@ public class listagemVIEW extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnVenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVenderActionPerformed
-        String id = id_produto_venda.getText();
-        
-        ProdutosDAO produtosdao = new ProdutosDAO();
-        
-        //produtosdao.venderProduto(Integer.parseInt(id));
+    String idTexto = id_produto_venda.getText().trim();
+
+    if (!idTexto.isEmpty()) {
+        try {
+            int idProduto = Integer.parseInt(idTexto);
+            ProdutosDAO dao = new ProdutosDAO();
+
+            dao.venderProduto(idProduto);
+
+            JOptionPane.showMessageDialog(this, "Produto vendido com sucesso!");
+            listarProdutos();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Digite um ID válido (apenas números)!");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao vender produto: " + e.getMessage());
+        }
+    } else {
+        JOptionPane.showMessageDialog(this, "Informe o ID do produto!");
+    }
+}
+
+private void btnConsultarVendasActionPerformed(java.awt.event.ActionEvent evt) {
+    new VendasVIEW().setVisible(true);
         listarProdutos();
     }//GEN-LAST:event_btnVenderActionPerformed
 
     private void btnVendasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVendasActionPerformed
-        //vendasVIEW vendas = new vendasVIEW(); 
-        //vendas.setVisible(true);
+        VendasVIEW vendas = new VendasVIEW(); 
+        vendas.setVisible(true);
     }//GEN-LAST:event_btnVendasActionPerformed
 
     private void btnVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVoltarActionPerformed
@@ -205,25 +224,14 @@ public class listagemVIEW extends javax.swing.JFrame {
     private javax.swing.JTable listaProdutos;
     // End of variables declaration//GEN-END:variables
 
-    private void listarProdutos(){
+private void listarProdutos() {
+    ProdutosDAO dao = new ProdutosDAO();
+    ArrayList<ProdutosDTO> lista = dao.listarProdutos();
     DefaultTableModel model = (DefaultTableModel) listaProdutos.getModel();
     model.setRowCount(0);
 
-    String sql = "SELECT * FROM produtos";
-    try (java.sql.Connection conn = new conectaDAO().connectDB();
-         java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
-         java.sql.ResultSet rs = stmt.executeQuery()) {
-
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getInt("id"),
-                rs.getString("nome"),
-                rs.getInt("valor"),
-                rs.getString("status")
-            });
-        }
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Erro ao listar produtos: " + e.getMessage());
-    }   
+    for (ProdutosDTO p : lista) {
+        model.addRow(new Object[]{p.getId(), p.getNome(), p.getValor(), p.getStatus()});
     }
+}
 }
